@@ -10,7 +10,8 @@
 //#define LCDpow 9
 
 
-String line1,line2;
+char line1[16]="               ";
+char line2[16]="               ";
 
 moLCD::moLCD(int e, int s, int c, int p){
 	this->enbl = e;
@@ -48,7 +49,7 @@ moLCD::moLCD(int e, int s, int c, int p){
 	//Set display to move forward
 	this->sendMessage(0b000000);
 	this->sendMessage(0b011000);  
-/*
+
 	char test[8]={
 		0b10000,
 		0b10000,
@@ -106,7 +107,7 @@ moLCD::moLCD(int e, int s, int c, int p){
 	drawChar(2,test2);
 	drawChar(3,test3);
 	drawChar(4,test4);
-*/
+
 	//type name
 	char amot[16]="String 1";
 	this->displayString(1,amot);
@@ -117,22 +118,24 @@ moLCD::moLCD(int e, int s, int c, int p){
 
 }
 
+//--------------PRIVATE FUNCTIONS--------------
+
 void moLCD::clock(){
-  delayMicroseconds(10);
+  delayMicroseconds(1);
   digitalWrite(this->clk,HIGH);
-  delayMicroseconds(10);
+  delayMicroseconds(1);
   digitalWrite(this->clk,LOW);
-  delayMicroseconds(10);
+  delayMicroseconds(1);
 
   
 }
 
 void moLCD::enable(){
-  delayMicroseconds(10);
+  delayMicroseconds(1);
   digitalWrite(this->enbl,HIGH);
-  delayMicroseconds(10);
+  delayMicroseconds(1);
   digitalWrite(this->enbl,LOW);
-  delayMicroseconds(10);
+  delayMicroseconds(1);
 }
 
 
@@ -161,6 +164,7 @@ void moLCD::setDDRAM(int aDDy){
   this->sendMessage((aDDy<<2)&0b111100);
 }
 
+//--------------PUBLIC FUNCTIONS--------------
     
 void moLCD::displayString(int lineNum,char *msg)
 {
@@ -177,6 +181,7 @@ void moLCD::displayString(int lineNum,char *msg)
     while(msg[j]!='\0'){
       this->sendMessage(((msg[j]>>2)&0b111100)|1);
       this->sendMessage(((msg[j]<<2)&0b111100)|1);
+	  line1[j]=msg[j];
       j++;
     }
   }
@@ -191,6 +196,7 @@ void moLCD::displayString(int lineNum,char *msg)
     while(msg[j]!='\0'){
       this->sendMessage(((msg[j]>>2)&0b111100)|1);
       this->sendMessage(((msg[j]<<2)&0b111100)|1);
+	  line2[j]=msg[j];
       j++;
     }
   }
@@ -216,3 +222,38 @@ void moLCD::drawChar(int charIndex, char *drawing){
 	this->setDDRAM(0);
 }
 
+void moLCD::drawAtLoc(int lineNum,int startLoc,char *msg){
+	int lineIndex=(lineNum-1)*64+startLoc;
+	setDDRAM(lineIndex);
+	int msgLen=0;
+	while(msg[msgLen]!='\0'){
+		this->sendMessage(((msg[msgLen]>>2)&0b111100)+1);
+		this->sendMessage(((msg[msgLen]<<2)&0b111100)+1);
+		if(lineNum==1)
+			line1[lineIndex+msgLen]=msg[msgLen];
+		else if(lineNum==2)
+			line2[lineIndex+msgLen]=msg[msgLen];
+		msgLen++;
+	}	
+}
+
+void moLCD::setCurs(int flash,int loc){
+	if(flash){
+		this->sendMessage(0b000000);
+		this->sendMessage(0b111100);
+	}
+	else{
+		this->sendMessage(0b000000);
+		this->sendMessage(0b110000);
+	}
+	this->setDDRAM(loc);
+}
+
+void moLCD::menuMoveDown(int &x){
+	if(x<2)
+		x++;
+}
+void moLCD::menuMoveUp(int &x){
+	if(x>0)
+		x--;
+}

@@ -10,6 +10,11 @@ class moLCD
 		moLCD(int e,int s, int c, int p);
 		void displayString(int lineNum,char *msg);
 		void drawChar(int charIndex, char *drawing);
+		void drawAtLoc(int lineNum,int startLoc, char *msg);
+		void setCurs(int flash,int loc);
+		void menuMoveDown(int &x);
+		void menuMoveUp(int &x);
+		
 	private:
 		void clock();
 		void enable();
